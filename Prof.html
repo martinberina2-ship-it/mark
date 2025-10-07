@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof. Go - Faculty Attendance and Ranking System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#002060', // Lourdes deep blue
+            secondary: '#FFD700', // Lourdes gold
+            accent: '#0056b3', // darker blue accent
+            warning: '#F59E0B',
+            danger: '#EF4444'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-br from-[#eaf0fa] to-[#f7f7fa] min-h-screen font-sans">
+
+  <!-- Navigation -->
+  <nav class="bg-primary shadow-md sticky top-0 z-50">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-white border-2 border-secondary">
+          <img src="assets/prof-go-logo.svg" alt="Prof Go logo" class="w-full h-full object-contain p-1" />
+        </div>
+        <h1 class="text-2xl font-bold text-secondary drop-shadow-sm">Prof. Go</h1>
+      </div>
+      <div id="nav-user" class="hidden items-center space-x-2">
+        <div id="nav-profile-pic" class="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center overflow-hidden">
+          <img id="nav-profile-img" src="" alt="Profile" class="w-8 h-8 object-cover hidden" />
+          <i class="fas fa-user text-primary" id="nav-profile-icon"></i>
+        </div>
+        <span id="nav-username" class="font-medium text-white"></span>
+        <button id="profile-btn" class="ml-2 px-2 py-1 text-sm bg-secondary text-primary rounded hover:bg-secondary/80 transition">Profile</button>
+      </div>
+  <!-- Profile Modal -->
+  <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+      <button id="close-profile" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+      <h3 class="text-xl font-bold mb-4 text-gray-800">Profile Details</h3>
+      <div class="flex flex-col items-center mb-4">
+        <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden mb-2 relative">
+          <img id="profile-img" src="" alt="Profile" class="w-24 h-24 object-cover hidden" />
+          <i class="fas fa-user text-blue-600 text-4xl" id="profile-icon"></i>
+        </div>
+        <label for="profile-pic-input" class="text-xs text-primary cursor-pointer hover:underline">Change Profile Picture</label>
+        <input type="file" id="profile-pic-input" accept="image/*" class="hidden" />
+      </div>
+      <div id="profile-details" class="mb-4 text-gray-700">
+        <p><strong>Name:</strong> <span id="profile-name"></span></p>
+        <p><strong>Email:</strong> <span id="profile-email"></span></p>
+        <p><strong>Role:</strong> <span id="profile-role"></span></p>
+      </div>
+      <h4 class="text-lg font-semibold mb-2 mt-4 text-gray-800">Update Profile</h4>
+      <form id="profile-form" class="space-y-3">
+        <div>
+          <label for="profile-edit-name" class="block text-gray-700 mb-1">Full Name</label>
+          <input type="text" id="profile-edit-name" class="w-full border rounded-lg px-3 py-2" required />
+        </div>
+        <div>
+          <label for="profile-edit-password" class="block text-gray-700 mb-1">New Password</label>
+          <input type="password" id="profile-edit-password" class="w-full border rounded-lg px-3 py-2" placeholder="Leave blank to keep current password" />
+        </div>
+        <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Save Changes</button>
+        <p id="profile-message" class="text-center text-green-600 text-sm"></p>
+      </form>
+    </div>
+  </div>
+    </div>
+  </nav>
+
+  <!-- Login/Register Section -->
+  <section id="auth-section" class="container mx-auto px-4 py-12 max-w-lg">
+    <div class="bg-white shadow-lg rounded-xl p-8">
+  <h2 id="auth-title" class="text-2xl font-bold text-gray-800 text-center mb-6">Sign In</h2>
+
+
+      <!-- Login Form -->
+      <form id="login-form" class="space-y-4">
+        <input type="email" id="login-email" placeholder="Email Address"
+          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary" required>
+        <input type="password" id="login-password" placeholder="Password"
+          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary" required>
+        <button type="submit"
+          class="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+          Sign In
+        </button>
+        <p id="login-message" class="text-center text-red-600 text-sm"></p>
+        <p class="text-center text-sm mt-2">Do not have an account?
+          <a href="#" id="show-register" class="text-primary font-medium">Register Here</a>
+        </p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="space-y-4 hidden">
+        <input type="text" id="reg-name" placeholder="Full Name"
+          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary" required>
+        <input type="email" id="reg-email" placeholder="Email Address"
+          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary" required>
+        <input type="password" id="reg-password" placeholder="Password"
+          class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary" required>
+        <button type="submit"
+          class="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+          Register
+        </button>
+        <p id="register-message" class="text-center text-green-600 text-sm"></p>
+        <p class="text-center text-sm mt-2">Already have an account?
+          <a href="#" id="show-login" class="text-primary font-medium">Sign In</a>
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <main id="dashboard" class="hidden container mx-auto px-4 py-10 relative">
+    <!-- Floating clock controls (moved here from Attendance Controls) -->
+    <div class="absolute top-4 right-4 z-50 flex space-x-3">
+      <button id="time-in-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        Clock In
+      </button>
+      <button id="time-out-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition" disabled>
+        Clock Out
+      </button>
+    </div>
+
+    <!-- Online Users (real-time) -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-2">Online Users</h3>
+      <div id="online-users" class="flex flex-wrap gap-2"></div>
+    </section>
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <p class="text-gray-600">Cumulative Hours</p>
+        <p id="total-hours" class="text-2xl font-bold text-blue-600">0h</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <p class="text-gray-600">Most Recent Session</p>
+        <p id="last-session" class="text-2xl font-bold text-green-600">-</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <p class="text-gray-600">Current Rank</p>
+        <p id="current-rank" class="text-2xl font-bold text-yellow-600">-</p>
+      </div>
+    </div>
+
+    <!-- Attendance Controls -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Attendance Management</h2>
+      <div class="flex flex-col space-y-2 mb-4">
+        <div class="flex space-x-4">
+          <!-- Clock In/Out buttons moved to floating controls at top-right -->
+        </div>
+        <div id="clockin-camera-area" class="hidden flex-col items-center mt-2">
+          <video id="clockin-video" width="240" height="180" autoplay class="rounded border mb-2"></video>
+          <button id="clockin-capture-btn" class="bg-primary text-white px-3 py-1 rounded hover:bg-primary/80 transition mb-2">Capture Photo</button>
+          <canvas id="clockin-canvas" width="240" height="180" class="hidden"></canvas>
+          <img id="clockin-preview" src="" alt="Preview" class="hidden rounded border mb-2" width="120" />
+        </div>
+      </div>
+      <div class="flex space-x-4 mb-4">
+        <button id="payroll-btn" class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+          Payroll
+        </button>
+        <button id="leave-btn" class="flex-1 bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition">
+          Leave Application
+        </button>
+      </div>
+      <!-- Payroll Modal -->
+      <div id="payroll-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+          <button id="close-payroll" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+          <h3 class="text-xl font-bold mb-4 text-gray-800">Payroll Summary</h3>
+          <div id="payroll-summary" class="mb-4 text-gray-700">
+            <p><strong>Name:</strong> <span id="payroll-name"></span></p>
+            <p><strong>Total Hours:</strong> <span id="payroll-hours"></span></p>
+            <p><strong>Estimated Pay:</strong> <span id="payroll-pay"></span></p>
+            <p class="text-xs text-gray-500 mt-2">* This is a sample payroll summary. Actual payroll computation may vary.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Leave Application Modal -->
+      <div id="leave-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+          <button id="close-leave" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+          <h3 class="text-xl font-bold mb-4 text-gray-800">Leave Application</h3>
+          <form id="leave-form" class="space-y-4">
+            <div>
+              <label for="leave-type" class="block text-gray-700 mb-1">Type of Leave</label>
+              <select id="leave-type" class="w-full border rounded-lg px-3 py-2" required>
+                <option value="">Select type</option>
+                <option value="Sick Leave">Sick Leave</option>
+                <option value="Vacation Leave">Vacation Leave</option>
+                <option value="Emergency Leave">Emergency Leave</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="leave-date" class="block text-gray-700 mb-1">Date</label>
+              <input type="date" id="leave-date" class="w-full border rounded-lg px-3 py-2" required />
+            </div>
+            <div>
+              <label for="leave-reason" class="block text-gray-700 mb-1">Reason</label>
+              <textarea id="leave-reason" class="w-full border rounded-lg px-3 py-2" rows="2" required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">Submit Application</button>
+            <p id="leave-message" class="text-center text-green-600 text-sm"></p>
+          </form>
+        </div>
+      </div>
+      <p id="attendance-message" class="text-center mt-4 text-gray-600"></p>
+    </section>
+
+    <!-- Attendance Records -->
+    <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Attendance Records</h2>
+      <div class="overflow-x-auto">
+  <table class="w-full border text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-2 border">Date</th>
+              <th class="p-2 border">Time In</th>
+              <th class="p-2 border">Time Out</th>
+              <th class="p-2 border">Hours</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-records"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Ranking -->
+    <section class="bg-white rounded-xl shadow-md p-6">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Faculty Ranking</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full border text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-2 border">Rank</th>
+              <th class="p-2 border">Name</th>
+              <th class="p-2 border">Total Hours</th>
+            </tr>
+          </thead>
+          <tbody id="ranking-list"></tbody>
+        </table>
+      </div>
+      <button id="logout-btn"
+        class="mt-6 bg-danger text-white py-2 px-4 rounded-lg hover:bg-red-700 transition">
+        Sign Out
+      </button>
+    </section>
+  </main>
+
+  <script>
+    // Local storage "DB"
+  let users = JSON.parse(localStorage.getItem('users')) || [];
+  let attendance = JSON.parse(localStorage.getItem('attendance')) || [];
+  let leaveApplications = JSON.parse(localStorage.getItem('leaveApplications')) || [];
+
+    let currentUser = null;
+    let currentTimeIn = null;
+
+    // Restore currentTimeIn from localStorage if present
+    function getCurrentTimeInFromStorage(email) {
+      const stored = localStorage.getItem('currentTimeIn_' + email);
+      if (stored) {
+        const d = new Date(stored);
+        // If not today, ignore (reset daily)
+        if (d.toDateString() === new Date().toDateString()) {
+          return d;
+        } else {
+          setCurrentTimeInToStorage(email, null);
+          return null;
+        }
+      }
+      return null;
+    }
+    function setCurrentTimeInToStorage(email, dateObj) {
+      if (dateObj) {
+        localStorage.setItem('currentTimeIn_' + email, dateObj.toISOString());
+      } else {
+        localStorage.removeItem('currentTimeIn_' + email);
+      }
+    }
+
+    // Daily attendance reset: clear all currentTimeIn at midnight
+    function scheduleDailyReset() {
+      const now = new Date();
+      const msToMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1) - now;
+      setTimeout(() => {
+        users.forEach(u => setCurrentTimeInToStorage(u.email, null));
+        scheduleDailyReset();
+      }, msToMidnight);
+    }
+    scheduleDailyReset();
+    // Ensure admin user exists
+    if (!users.find(u => u.email === 'admin@admin.com')) {
+      users.push({ name: 'Administrator', email: 'admin@admin.com', password: 'admin', isAdmin: true });
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+  // Elements
+  const authSection = document.getElementById('auth-section');
+  const dashboard = document.getElementById('dashboard');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const showRegister = document.getElementById('show-register');
+  const showLogin = document.getElementById('show-login');
+  const loginMsg = document.getElementById('login-message');
+  const registerMsg = document.getElementById('register-message');
+  const navUser = document.getElementById('nav-user');
+  const navUsername = document.getElementById('nav-username');
+  const userNameDisplay = document.getElementById('user-name');
+  const timeInBtn = document.getElementById('time-in-btn');
+  const timeOutBtn = document.getElementById('time-out-btn');
+  const attendanceMsg = document.getElementById('attendance-message');
+  const recordsTbody = document.getElementById('attendance-records');
+  const rankingTbody = document.getElementById('ranking-list');
+  const logoutBtn = document.getElementById('logout-btn');
+  const totalHoursEl = document.getElementById('total-hours');
+  const lastSessionEl = document.getElementById('last-session');
+  const currentRankEl = document.getElementById('current-rank');
+  // Payroll & Leave & Profile
+  // Profile Modal Elements
+  const profileBtn = document.getElementById('profile-btn');
+  const profileModal = document.getElementById('profile-modal');
+  const closeProfile = document.getElementById('close-profile');
+  const profileDetails = document.getElementById('profile-details');
+  const profileName = document.getElementById('profile-name');
+  const profileEmail = document.getElementById('profile-email');
+  const profileRole = document.getElementById('profile-role');
+  const profileForm = document.getElementById('profile-form');
+  const profileEditName = document.getElementById('profile-edit-name');
+  const profileEditPassword = document.getElementById('profile-edit-password');
+  const profileMessage = document.getElementById('profile-message');
+  const profileImg = document.getElementById('profile-img');
+  const profileIcon = document.getElementById('profile-icon');
+  const profilePicInput = document.getElementById('profile-pic-input');
+  const navProfileImg = document.getElementById('nav-profile-img');
+  const navProfileIcon = document.getElementById('nav-profile-icon');
+    // Profile Modal Logic
+    function updateProfilePicUI(user) {
+      if (user && user.profilePic) {
+        profileImg.src = user.profilePic;
+        profileImg.classList.remove('hidden');
+        profileIcon.classList.add('hidden');
+        navProfileImg.src = user.profilePic;
+        navProfileImg.classList.remove('hidden');
+        navProfileIcon.classList.add('hidden');
+      } else {
+        profileImg.src = '';
+        profileImg.classList.add('hidden');
+        profileIcon.classList.remove('hidden');
+        navProfileImg.src = '';
+        navProfileImg.classList.add('hidden');
+        navProfileIcon.classList.remove('hidden');
+      }
+    }
+
+  profileBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      profileName.textContent = currentUser.name;
+      profileEmail.textContent = currentUser.email;
+      profileRole.textContent = currentUser.isAdmin ? 'Administrator' : 'Faculty';
+      profileEditName.value = currentUser.name;
+      profileEditPassword.value = '';
+      profileMessage.textContent = '';
+      updateProfilePicUI(currentUser);
+      profileModal.classList.remove('hidden');
+    });
+    closeProfile.addEventListener('click', () => {
+      profileModal.classList.add('hidden');
+    });
+    profileModal.addEventListener('click', (e) => {
+      if (e.target === profileModal) profileModal.classList.add('hidden');
+    });
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newName = profileEditName.value.trim();
+      const newPass = profileEditPassword.value;
+      let changed = false;
+      // Update name
+      if (newName && newName !== currentUser.name) {
+        currentUser.name = newName;
+        changed = true;
+      }
+      // Update password
+      if (newPass) {
+        currentUser.password = newPass;
+        changed = true;
+      }
+      // Update in users array
+      const idx = users.findIndex(u => u.email === currentUser.email);
+      if (idx !== -1) {
+        users[idx] = currentUser;
+        localStorage.setItem('users', JSON.stringify(users));
+      }
+      // Broadcast user update to other clients
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'user-update', user: { name: currentUser.name, email: currentUser.email } }));
+      }
+      // Update nav
+      navUsername.textContent = currentUser.name;
+      updateProfilePicUI(currentUser);
+      if (changed) {
+        profileMessage.textContent = 'Profile updated successfully.';
+        profileName.textContent = currentUser.name;
+      } else {
+        profileMessage.textContent = 'No changes made.';
+      }
+    });
+
+    // Profile Picture Upload
+    profilePicInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentUser.profilePic = e.target.result;
+        // Update in users array
+        const idx = users.findIndex(u => u.email === currentUser.email);
+        if (idx !== -1) {
+          users[idx] = currentUser;
+          localStorage.setItem('users', JSON.stringify(users));
+        }
+        updateProfilePicUI(currentUser);
+      };
+      reader.readAsDataURL(file);
+    });
+  const payrollBtn = document.getElementById('payroll-btn');
+  const payrollModal = document.getElementById('payroll-modal');
+  const closePayroll = document.getElementById('close-payroll');
+  const payrollName = document.getElementById('payroll-name');
+  const payrollHours = document.getElementById('payroll-hours');
+  const payrollPay = document.getElementById('payroll-pay');
+  const leaveBtn = document.getElementById('leave-btn');
+  const leaveModal = document.getElementById('leave-modal');
+  const closeLeave = document.getElementById('close-leave');
+  const leaveForm = document.getElementById('leave-form');
+  const leaveMessage = document.getElementById('leave-message');
+  // Admin Leave Table
+  let leaveAdminTable = null;
+    // Payroll Modal Logic
+    payrollBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      // Calculate total hours
+      const records = attendance.filter(a => a.email === currentUser.email);
+      let total = 0;
+      records.forEach(r => { total += parseFloat(r.hours); });
+      payrollName.textContent = currentUser.name;
+      payrollHours.textContent = total.toFixed(2) + 'h';
+      // Example: 200 PHP per hour
+      const pay = total * 200;
+      payrollPay.textContent = '₱' + pay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      payrollModal.classList.remove('hidden');
+    });
+    closePayroll.addEventListener('click', () => {
+      payrollModal.classList.add('hidden');
+    });
+    payrollModal.addEventListener('click', (e) => {
+      if (e.target === payrollModal) payrollModal.classList.add('hidden');
+    });
+
+    // Leave Modal Logic
+    leaveBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      leaveForm.reset();
+      leaveMessage.textContent = '';
+      leaveModal.classList.remove('hidden');
+    });
+    closeLeave.addEventListener('click', () => {
+      leaveModal.classList.add('hidden');
+    });
+    leaveModal.addEventListener('click', (e) => {
+      if (e.target === leaveModal) leaveModal.classList.add('hidden');
+    });
+    leaveForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const type = document.getElementById('leave-type').value;
+      const date = document.getElementById('leave-date').value;
+      const reason = document.getElementById('leave-reason').value;
+      const application = {
+        id: Date.now(),
+        name: currentUser.name,
+        email: currentUser.email,
+        type,
+        date,
+        reason,
+        status: 'Pending'
+      };
+      leaveApplications.push(application);
+      localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+      leaveMessage.textContent = 'Your leave application has been submitted.';
+      setTimeout(() => {
+        leaveModal.classList.add('hidden');
+        if (currentUser.isAdmin) renderAdminLeaveTable();
+      }, 1500);
+    });
+
+    // Admin Leave Table Rendering
+    function renderAdminLeaveTable() {
+      if (!leaveAdminTable) return;
+      leaveAdminTable.innerHTML = '';
+      if (leaveApplications.length === 0) {
+        leaveAdminTable.innerHTML = '<tr><td colspan="6" class="p-2">No leave applications.</td></tr>';
+        return;
+      }
+      leaveApplications.forEach(app => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="p-2 border">${app.name}</td>
+                        <td class="p-2 border">${app.email}</td>
+                        <td class="p-2 border">${app.type}</td>
+                        <td class="p-2 border">${app.date}</td>
+                        <td class="p-2 border">${app.reason}</td>
+                        <td class="p-2 border">${app.status === 'Pending' ?
+                          `<button class='accept-leave bg-green-500 text-white px-2 py-1 rounded mr-1' data-id='${app.id}'>Accept</button>
+                           <button class='reject-leave bg-red-500 text-white px-2 py-1 rounded' data-id='${app.id}'>Reject</button>`
+                          : app.status}
+                        </td>`;
+        leaveAdminTable.appendChild(tr);
+      });
+      // Add event listeners for accept/reject
+      document.querySelectorAll('.accept-leave').forEach(btn => {
+        btn.onclick = function() {
+          const id = Number(this.getAttribute('data-id'));
+          const idx = leaveApplications.findIndex(a => a.id === id);
+          if (idx !== -1) {
+            leaveApplications[idx].status = 'Accepted';
+            localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+            renderAdminLeaveTable();
+          }
+        };
+      });
+      document.querySelectorAll('.reject-leave').forEach(btn => {
+        btn.onclick = function() {
+          const id = Number(this.getAttribute('data-id'));
+          const idx = leaveApplications.findIndex(a => a.id === id);
+          if (idx !== -1) {
+            leaveApplications[idx].status = 'Rejected';
+            localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+            renderAdminLeaveTable();
+          }
+        };
+      });
+    }
+
+    // Switch forms
+    showRegister.addEventListener('click', e => {
+      e.preventDefault();
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+      loginMsg.textContent = '';
+      document.getElementById('auth-title').textContent = 'Register';
+    });
+    showLogin.addEventListener('click', e => {
+      e.preventDefault();
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      registerMsg.textContent = '';
+      document.getElementById('auth-title').textContent = 'Sign In';
+    });
+
+    // Register (server-backed when available, otherwise fallback to localStorage)
+    let staticFallbackMode = false; // set true when server API isn't available
+    registerForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-password').value;
+      if (!name || !email || !pass) {
+        registerMsg.textContent = 'Please fill in all fields.';
+        return;
+      }
+
+      // Attempt server registration first; if it fails, persist locally
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password: pass })
+      }).then(async r => {
+        // If server responds OK, use it. If not, fall back to local registration.
+        if (r.ok) {
+          const res = await r.json().catch(() => ({}));
+          registerMsg.textContent = (res && res.ok) ? 'Registration successful. You may now sign in.' : 'Registration saved on server. You may now sign in.';
+          registerForm.reset();
+        } else {
+          // Server returned an error status (e.g., 404 on static hosting)
+          staticFallbackMode = true;
+          // Create local user record
+          if (users.find(u => u.email === email)) {
+            registerMsg.textContent = 'An account with that email already exists.';
+            return;
+          }
+          users.push({ name, email, password: pass, isAdmin: false });
+          localStorage.setItem('users', JSON.stringify(users));
+          registerMsg.textContent = 'Registration saved locally. You may now sign in.';
+          registerForm.reset();
+        }
+      }).catch(err => {
+        // Network or CORS error — fallback to local registration
+        staticFallbackMode = true;
+        if (users.find(u => u.email === email)) {
+          registerMsg.textContent = 'An account with that email already exists.';
+          return;
+        }
+        users.push({ name, email, password: pass, isAdmin: false });
+        localStorage.setItem('users', JSON.stringify(users));
+        registerMsg.textContent = 'Registration saved locally (offline mode). You may now sign in.';
+        registerForm.reset();
+      });
+    });
+
+    // Login
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const pass = document.getElementById('login-password').value;
+      const user = users.find(u => u.email === email && u.password === pass);
+      if (!user) {
+        loginMsg.textContent = 'The email address or password you entered is incorrect.';
+        return;
+      }
+      currentUser = user;
+      // Restore currentTimeIn if present
+      currentTimeIn = getCurrentTimeInFromStorage(currentUser.email);
+      authSection.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+      navUser.classList.remove('hidden');
+      navUsername.textContent = currentUser.name;
+      loadAttendance();
+      loadRanking();
+      renderLeaveSection();
+      // If clocked in, update button states and message
+      if (currentTimeIn) {
+        timeInBtn.disabled = true;
+        timeOutBtn.disabled = false;
+        attendanceMsg.textContent = `You have clocked in at ${currentTimeIn.toLocaleTimeString()}.`;
+      } else {
+        timeInBtn.disabled = false;
+        timeOutBtn.disabled = true;
+      }
+    });
+
+    // Time In
+    // Camera elements
+    const clockinCameraArea = document.getElementById('clockin-camera-area');
+    const clockinVideo = document.getElementById('clockin-video');
+    const clockinCaptureBtn = document.getElementById('clockin-capture-btn');
+    const clockinCanvas = document.getElementById('clockin-canvas');
+    const clockinPreview = document.getElementById('clockin-preview');
+    let clockinStream = null;
+    let clockinImageData = null;
+
+    timeInBtn.addEventListener('click', async () => {
+      if (currentTimeIn) {
+        attendanceMsg.textContent = 'Already clocked in.';
+        return;
+      }
+      // Show camera area
+      clockinCameraArea.classList.remove('hidden');
+      clockinPreview.classList.add('hidden');
+      clockinImageData = null;
+      // Start camera
+      try {
+        clockinStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        clockinVideo.srcObject = clockinStream;
+      } catch (err) {
+        attendanceMsg.textContent = 'Camera access denied or not available.';
+        return;
+      }
+    });
+
+    clockinCaptureBtn.addEventListener('click', () => {
+      // Capture image from video
+      clockinCanvas.getContext('2d').drawImage(clockinVideo, 0, 0, 240, 180);
+      clockinImageData = clockinCanvas.toDataURL('image/png');
+      clockinPreview.src = clockinImageData;
+      clockinPreview.classList.remove('hidden');
+      // Stop camera
+      if (clockinStream) {
+        clockinStream.getTracks().forEach(track => track.stop());
+        clockinStream = null;
+      }
+      // Proceed with clock in
+      currentTimeIn = new Date();
+      setCurrentTimeInToStorage(currentUser.email, currentTimeIn);
+      attendanceMsg.textContent = `You have clocked in at ${currentTimeIn.toLocaleTimeString()}.`;
+      timeInBtn.disabled = true;
+      timeOutBtn.disabled = false;
+      clockinCameraArea.classList.add('hidden');
+    });
+
+    // Time Out
+    timeOutBtn.addEventListener('click', () => {
+      if (!currentTimeIn) return;
+      const out = new Date();
+      const diff = (out - currentTimeIn) / 1000 / 60 / 60;
+      const record = {
+        id: Date.now() + '-' + Math.floor(Math.random() * 10000),
+        email: currentUser.email,
+        name: currentUser.name,
+        date: currentTimeIn.toDateString(),
+        timeIn: currentTimeIn.toLocaleTimeString(),
+        timeOut: out.toLocaleTimeString(),
+        hours: diff.toFixed(2),
+        photo: clockinImageData || null
+      };
+      attendance.push(record);
+      localStorage.setItem('attendance', JSON.stringify(attendance));
+      // Broadcast new attendance record
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'attendance-record', record }));
+      }
+      attendanceMsg.textContent = `You have clocked out at ${out.toLocaleTimeString()}. Total hours worked: ${diff.toFixed(2)}.`;
+      currentTimeIn = null;
+      setCurrentTimeInToStorage(currentUser.email, null);
+      timeInBtn.disabled = false;
+      timeOutBtn.disabled = true;
+      clockinImageData = null;
+      loadAttendance();
+      loadRanking();
+    });
+
+    // Load records
+    function loadAttendance() {
+      const records = attendance.filter(a => a.email === currentUser.email);
+      recordsTbody.innerHTML = '';
+      if (records.length === 0) {
+  recordsTbody.innerHTML = '<tr><td colspan="4" class="p-2">No attendance records available.</td></tr>';
+        totalHoursEl.textContent = '0h';
+        lastSessionEl.textContent = '-';
+        return;
+      }
+      let total = 0;
+      records.forEach(r => {
+        total += parseFloat(r.hours);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="p-2 border">${r.date}</td>
+                        <td class="p-2 border">${r.timeIn}</td>
+                        <td class="p-2 border">${r.timeOut}</td>
+                        <td class="p-2 border">${r.hours}</td>`;
+        recordsTbody.appendChild(tr);
+      });
+      totalHoursEl.textContent = total.toFixed(2) + 'h';
+      lastSessionEl.textContent = records[records.length - 1].hours + 'h';
+    }
+
+    // Ranking
+    function loadRanking() {
+      const totals = {};
+      attendance.forEach(a => {
+        totals[a.email] = (totals[a.email] || 0) + parseFloat(a.hours);
+      });
+      const ranked = users.map(u => ({
+        name: u.name,
+        hours: totals[u.email] ? totals[u.email].toFixed(2) : 0
+      })).sort((a, b) => b.hours - a.hours);
+      rankingTbody.innerHTML = '';
+      ranked.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="p-2 border">#${i + 1}</td>
+                        <td class="p-2 border">${r.name}</td>
+                        <td class="p-2 border">${r.hours}h</td>`;
+        rankingTbody.appendChild(tr);
+      });
+      const myRank = ranked.findIndex(r => r.name === currentUser.name) + 1;
+      currentRankEl.textContent = myRank > 0 ? `#${myRank}` : '-';
+    }
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      // Save all data before logout
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('attendance', JSON.stringify(attendance));
+      localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+      // Save currentTimeIn for this user
+      if (currentUser && currentTimeIn) {
+        setCurrentTimeInToStorage(currentUser.email, currentTimeIn);
+      }
+      currentUser = null;
+      authSection.classList.remove('hidden');
+      dashboard.classList.add('hidden');
+      navUser.classList.add('hidden');
+      if (document.getElementById('leave-admin-section')) {
+        document.getElementById('leave-admin-section').remove();
+      }
+      if (document.getElementById('leave-user-section')) {
+        document.getElementById('leave-user-section').remove();
+      }
+    });
+
+    // ---------- WebSocket real-time syncing ----------
+    // Connect to server's WebSocket. Uses same host and port as the page.
+    const wsProto = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+    // If served from file:// while developing, fallback to IP with port 8000
+    const wsHost = (location.hostname && location.hostname !== '') ? location.host : '192.168.254.103:8000';
+    const wsUrl = wsProto + wsHost;
+    let socket = null;
+
+    function connectWS() {
+      try {
+        socket = new WebSocket(wsUrl);
+      } catch (e) {
+        console.warn('WebSocket connect failed', e);
+        return;
+      }
+      socket.addEventListener('open', () => {
+        console.log('WS open', wsUrl);
+        // If logged in, announce current user
+        if (currentUser) {
+          socket.send(JSON.stringify({ type: 'set-user', name: currentUser.name, email: currentUser.email }));
+        }
+      });
+      socket.addEventListener('message', (ev) => {
+        let msg = {};
+        try { msg = JSON.parse(ev.data); } catch (e) { return; }
+          // If server sends the authoritative full state, merge it
+          if (msg.type === 'full-state') {
+            // Merge users
+            if (Array.isArray(msg.users)) {
+              // prefer server data for name/email; keep local passwords if present
+              msg.users.forEach(su => {
+                const idx = users.findIndex(u => u.email === su.email);
+                if (idx === -1) {
+                  users.push(Object.assign({}, su));
+                } else {
+                  users[idx].name = su.name || users[idx].name;
+                  users[idx].isAdmin = su.isAdmin || users[idx].isAdmin;
+                }
+              });
+              localStorage.setItem('users', JSON.stringify(users));
+            }
+            // Merge attendance
+            if (Array.isArray(msg.attendance)) {
+              msg.attendance.forEach(rec => {
+                if (!attendance.find(a => a.id === rec.id)) attendance.push(rec);
+              });
+              localStorage.setItem('attendance', JSON.stringify(attendance));
+            }
+            // Merge leave applications
+            if (Array.isArray(msg.leaveApplications)) {
+              msg.leaveApplications.forEach(l => {
+                if (!leaveApplications.find(x => x.id === l.id)) leaveApplications.push(l);
+              });
+              localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+            }
+            // Refresh UI if logged in
+            if (currentUser) {
+              loadAttendance();
+              loadRanking();
+              renderLeaveSection();
+            }
+          }
+        if (msg.type === 'online-list') {
+          renderOnlineUsers(msg.online || []);
+        }
+        if (msg.type === 'signin') {
+          // Show a small temporary notice and update any shared lists if needed
+          showToast(`${msg.name} signed in at ${new Date(msg.time).toLocaleTimeString()}`);
+        }
+        if (msg.type === 'signout') {
+          showToast(`${msg.name} signed out at ${new Date(msg.time).toLocaleTimeString()}`);
+        }
+        // Merge attendance records from other clients
+        if (msg.type === 'attendance-record' && msg.record) {
+          const exists = attendance.find(a => a.id === msg.record.id);
+          if (!exists) {
+            attendance.push(msg.record);
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            // Refresh UI if relevant
+            if (currentUser && (currentUser.email === msg.record.email || currentUser.isAdmin)) {
+              loadAttendance();
+            }
+            loadRanking();
+            renderLeaveSection();
+          }
+        }
+        // New user created on another client
+        if (msg.type === 'user-create' && msg.user) {
+          const u = msg.user;
+          if (!users.find(x => x.email === u.email)) {
+            users.push({ name: u.name, email: u.email, password: '' });
+            localStorage.setItem('users', JSON.stringify(users));
+            loadRanking();
+            renderLeaveSection();
+          }
+        }
+        // User updated on another client
+        if (msg.type === 'user-update' && msg.user) {
+          const u = msg.user;
+          const idx = users.findIndex(x => x.email === u.email);
+          if (idx !== -1) {
+            users[idx].name = u.name || users[idx].name;
+            localStorage.setItem('users', JSON.stringify(users));
+            // If the updated user is the currently logged in one, update UI
+            if (currentUser && currentUser.email === u.email) {
+              currentUser.name = users[idx].name;
+              navUsername.textContent = currentUser.name;
+            }
+            loadRanking();
+            renderLeaveSection();
+          }
+        }
+      });
+      socket.addEventListener('close', () => {
+        console.log('WS closed, retry in 3s');
+        setTimeout(connectWS, 3000);
+      });
+      socket.addEventListener('error', (e) => {
+        console.warn('WS error', e);
+      });
+    }
+    connectWS();
+
+    function renderOnlineUsers(list) {
+      const container = document.getElementById('online-users');
+      container.innerHTML = '';
+      if (!list || list.length === 0) {
+        container.innerHTML = '<span class="text-sm text-gray-500">No users online</span>';
+        return;
+      }
+      list.forEach(u => {
+        const el = document.createElement('div');
+        el.className = 'px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm';
+        el.textContent = u.name;
+        container.appendChild(el);
+      });
+    }
+
+    function showToast(text) {
+      // Simple ephemeral message in the attendance area
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-6 right-6 bg-primary text-white px-4 py-2 rounded shadow-lg';
+      toast.textContent = text;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // Broadcast sign-in and sign-out events when they happen
+    function broadcastSignIn(name, email) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'signin', name, email, time: new Date().toISOString() }));
+      }
+    }
+    function broadcastSignOut(name, email) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'signout', name, email, time: new Date().toISOString() }));
+      }
+    }
+
+    // Hook into login/logout and clock-in/clock-out
+    const originalLoginSubmit = loginForm.onsubmit;
+    loginForm.addEventListener('submit', (e) => {
+      // After existing login logic runs (it sets currentUser), broadcast
+      setTimeout(() => {
+        if (currentUser) {
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'set-user', name: currentUser.name, email: currentUser.email }));
+          }
+          broadcastSignIn(currentUser.name, currentUser.email);
+        }
+      }, 200);
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if (currentUser) broadcastSignOut(currentUser.name, currentUser.email);
+      // also close socket for this client session
+      if (socket) {
+        try { socket.close(); } catch (e) {}
+      }
+    });
+
+    // When clock-in action completes (currentTimeIn set), broadcast sign-in timestamp
+    const originalClockinCapture = clockinCaptureBtn.onclick;
+    clockinCaptureBtn.addEventListener('click', () => {
+      setTimeout(() => {
+        if (currentUser && currentTimeIn) broadcastSignIn(currentUser.name, currentUser.email);
+      }, 300);
+    });
+
+
+    // Render Leave Section (Admin/User)
+  function renderLeaveSection() {
+      // Remove previous
+      if (document.getElementById('leave-admin-section')) {
+        document.getElementById('leave-admin-section').remove();
+      }
+      if (document.getElementById('leave-user-section')) {
+        document.getElementById('leave-user-section').remove();
+      }
+      // Admin: show all attendance and leave applications
+      if (currentUser && currentUser.isAdmin) {
+        // User Management Section
+        const adminUserSection = document.createElement('section');
+        adminUserSection.id = 'admin-user-section';
+        adminUserSection.className = 'bg-white rounded-xl shadow-md p-6 mb-8';
+        adminUserSection.innerHTML = `
+          <h2 class="text-xl font-bold text-gray-800 mb-4">User Management</h2>
+          <div class="overflow-x-auto mb-6">
+            <table class="w-full border text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="p-2 border">Name</th>
+                  <th class="p-2 border">Email</th>
+                  <th class="p-2 border">Role</th>
+                  <th class="p-2 border">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-user-table"></tbody>
+            </table>
+          </div>
+        `;
+        dashboard.parentNode.insertBefore(adminUserSection, dashboard.nextSibling);
+        // Render users
+        const adminUserTable = document.getElementById('admin-user-table');
+        function renderAdminUserTable() {
+          adminUserTable.innerHTML = '';
+          users.forEach(u => {
+            if (u.email === currentUser.email) return; // Don't allow admin to delete self
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="p-2 border">${u.name}</td>
+              <td class="p-2 border">${u.email}</td>
+              <td class="p-2 border">
+                <select class="role-select border rounded px-1 py-0.5" data-email="${u.email}">
+                  <option value="Faculty" ${u.isAdmin ? '' : 'selected'}>Faculty</option>
+                  <option value="Admin" ${u.isAdmin ? 'selected' : ''}>Admin</option>
+                </select>
+              </td>
+              <td class="p-2 border">
+                <button class="delete-user-btn bg-danger text-white px-2 py-1 rounded hover:bg-red-700 transition" data-email="${u.email}">Delete</button>
+              </td>
+            `;
+            adminUserTable.appendChild(tr);
+          });
+          // Role assignment
+          document.querySelectorAll('.role-select').forEach(sel => {
+            sel.onchange = function() {
+              const email = this.getAttribute('data-email');
+              const user = users.find(u => u.email === email);
+              if (user) {
+                user.isAdmin = this.value === 'Admin';
+                localStorage.setItem('users', JSON.stringify(users));
+                renderAdminUserTable();
+              }
+            };
+          });
+          // Delete user
+          document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.onclick = function() {
+              const email = this.getAttribute('data-email');
+              if (confirm('Are you sure you want to delete this account?')) {
+                // Remove user
+                const idx = users.findIndex(u => u.email === email);
+                if (idx !== -1) {
+                  users.splice(idx, 1);
+                  // Remove attendance and leave applications for this user
+                  for (let i = attendance.length - 1; i >= 0; i--) {
+                    if (attendance[i].email === email) attendance.splice(i, 1);
+                  }
+                  for (let i = leaveApplications.length - 1; i >= 0; i--) {
+                    if (leaveApplications[i].email === email) leaveApplications.splice(i, 1);
+                  }
+                  localStorage.setItem('users', JSON.stringify(users));
+                  localStorage.setItem('attendance', JSON.stringify(attendance));
+                  localStorage.setItem('leaveApplications', JSON.stringify(leaveApplications));
+                  renderAdminUserTable();
+                }
+              }
+            };
+          });
+        }
+        renderAdminUserTable();
+
+        // Attendance Section with month selector
+        const adminAttendanceSection = document.createElement('section');
+        adminAttendanceSection.id = 'admin-attendance-section';
+        adminAttendanceSection.className = 'bg-white rounded-xl shadow-md p-6 mb-8';
+        const now = new Date();
+        const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        adminAttendanceSection.innerHTML = `
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xl font-bold text-gray-800">Faculty Attendance (Monthly Review)</h2>
+            <div class="flex items-center space-x-2">
+              <label class="text-sm text-gray-600">Sort:</label>
+              <select id="admin-attendance-sort" class="border rounded px-2 py-1 text-sm">
+                <option value="az">A → Z</option>
+                <option value="za">Z → A</option>
+              </select>
+              <button id="admin-attendance-compact-btn" class="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200">Compact</button>
+              <button id="admin-attendance-collapse-btn" class="px-2 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200">Minimize</button>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="font-medium text-gray-700 mr-2">Select Month:</label>
+            <input type="month" id="admin-attendance-month" value="${thisMonth}" class="border rounded px-2 py-1" />
+          </div>
+          <div class="overflow-x-auto mb-6">
+            <table id="admin-attendance-main-table" class="w-full border text-sm table-auto">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="p-2 border">Date</th>
+                  <th class="p-2 border">Name</th>
+                  <th class="p-2 border">Email</th>
+                  <th class="p-2 border">Status</th>
+                  <th class="p-2 border">Time In</th>
+                  <th class="p-2 border">Time Out</th>
+                  <th class="p-2 border">Hours</th>
+                  <th class="p-2 border">Photo</th>
+                </tr>
+              </thead>
+              <tbody id="admin-attendance-table"></tbody>
+            </table>
+          </div>
+        `;
+  dashboard.parentNode.insertBefore(adminAttendanceSection, adminUserSection.nextSibling);
+        // Render attendance for selected month
+        const adminAttendanceTable = document.getElementById('admin-attendance-table');
+        const monthInput = document.getElementById('admin-attendance-month');
+        const sortSelect = document.getElementById('admin-attendance-sort');
+        const compactBtn = document.getElementById('admin-attendance-compact-btn');
+        const collapseBtn = document.getElementById('admin-attendance-collapse-btn');
+        const adminMainTable = document.getElementById('admin-attendance-main-table');
+        let adminCompact = false;
+        let adminCollapsed = false;
+        compactBtn.addEventListener('click', () => {
+          adminCompact = !adminCompact;
+          compactBtn.textContent = adminCompact ? 'Comfort' : 'Compact';
+          renderMonthlyAttendance(monthInput.value);
+        });
+        collapseBtn.addEventListener('click', () => {
+          adminCollapsed = !adminCollapsed;
+          collapseBtn.textContent = adminCollapsed ? 'Expand' : 'Minimize';
+          adminMainTable.parentElement.style.display = adminCollapsed ? 'none' : '';
+        });
+        sortSelect.addEventListener('change', () => renderMonthlyAttendance(monthInput.value));
+        function renderMonthlyAttendance(monthStr) {
+          adminAttendanceTable.innerHTML = '';
+          // Get all users except admin
+          let facultyUsers = users.filter(u => !u.isAdmin);
+          // Sort alphabetically by name according to control
+          const order = (sortSelect && sortSelect.value) || 'az';
+          facultyUsers.sort((a, b) => {
+            const na = (a.name || '').toLowerCase();
+            const nb = (b.name || '').toLowerCase();
+            return order === 'az' ? na.localeCompare(nb) : nb.localeCompare(na);
+          });
+          // Get all days in month
+          const [year, month] = monthStr.split('-').map(Number);
+          const daysInMonth = new Date(year, month, 0).getDate();
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj = new Date(year, month - 1, d);
+            const dateStr = dateObj.toDateString();
+            facultyUsers.forEach(u => {
+              // Find attendance for this user on this date
+              const rec = attendance.find(a => a.email === u.email && a.date === dateStr);
+              let status = 'Absent', timeIn = '-', timeOut = '-', hours = '-', photo = '';
+              if (rec) {
+                status = 'Present';
+                timeIn = rec.timeIn;
+                timeOut = rec.timeOut;
+                hours = rec.hours;
+                if (rec.photo) {
+                  photo = `<img src='${rec.photo}' alt='Clock In Photo' class='w-16 h-12 object-cover rounded border' />`;
+                }
+              }
+              const cellClass = adminCompact ? 'p-1 text-xs' : 'p-2';
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td class="${cellClass} border">${dateStr}</td>
+                              <td class="${cellClass} border font-medium">${u.name}</td>
+                              <td class="${cellClass} border">${u.email}</td>
+                              <td class="${cellClass} border">${status}</td>
+                              <td class="${cellClass} border">${timeIn}</td>
+                              <td class="${cellClass} border">${timeOut}</td>
+                              <td class="${cellClass} border">${hours}</td>
+                              <td class="${cellClass} border">${photo}</td>`;
+              adminAttendanceTable.appendChild(tr);
+            });
+          }
+        }
+        renderMonthlyAttendance(thisMonth);
+        monthInput.addEventListener('change', e => {
+          renderMonthlyAttendance(e.target.value);
+        });
+
+        // Leave Applications Section (existing)
+        const adminSection = document.createElement('section');
+        adminSection.id = 'leave-admin-section';
+        adminSection.className = 'bg-white rounded-xl shadow-md p-6 mb-8';
+        adminSection.innerHTML = `
+          <h2 class=\"text-xl font-bold text-gray-800 mb-4\">All Leave Applications</h2>
+          <div class=\"overflow-x-auto\">
+            <table class=\"w-full border text-sm\">
+              <thead class=\"bg-gray-100\">
+                <tr>
+                  <th class=\"p-2 border\">Name</th>
+                  <th class=\"p-2 border\">Email</th>
+                  <th class=\"p-2 border\">Type</th>
+                  <th class=\"p-2 border\">Date</th>
+                  <th class=\"p-2 border\">Reason</th>
+                  <th class=\"p-2 border\">Status</th>
+                </tr>
+              </thead>
+              <tbody id=\"leave-admin-table\"></tbody>
+            </table>
+          </div>
+        `;
+        dashboard.parentNode.insertBefore(adminSection, adminAttendanceSection.nextSibling);
+        leaveAdminTable = document.getElementById('leave-admin-table');
+        renderAdminLeaveTable();
+      } else if (currentUser) {
+        // User: show their own leave applications
+        const userSection = document.createElement('section');
+        userSection.id = 'leave-user-section';
+        userSection.className = 'bg-white rounded-xl shadow-md p-6 mb-8';
+        userSection.innerHTML = `
+          <h2 class="text-xl font-bold text-gray-800 mb-4">My Leave Applications</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full border text-sm">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="p-2 border">Type</th>
+                  <th class="p-2 border">Date</th>
+                  <th class="p-2 border">Reason</th>
+                  <th class="p-2 border">Status</th>
+                </tr>
+              </thead>
+              <tbody id="leave-user-table"></tbody>
+            </table>
+          </div>
+        `;
+        dashboard.parentNode.insertBefore(userSection, dashboard.nextSibling);
+        // Render user's leave applications
+        const leaveUserTable = document.getElementById('leave-user-table');
+        leaveUserTable.innerHTML = '';
+        const myApps = leaveApplications.filter(a => a.email === currentUser.email);
+        if (myApps.length === 0) {
+          leaveUserTable.innerHTML = '<tr><td colspan="4" class="p-2">No leave applications.</td></tr>';
+        } else {
+          myApps.forEach(app => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="p-2 border">${app.type}</td>
+                            <td class="p-2 border">${app.date}</td>
+                            <td class="p-2 border">${app.reason}</td>
+                            <td class="p-2 border">${app.status}</td>`;
+            leaveUserTable.appendChild(tr);
+          });
+        }
+      }
+    }
+  </script>
+</body>
+</html>
